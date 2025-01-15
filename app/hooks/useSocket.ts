@@ -18,7 +18,13 @@ export const useSocket = (userId: string) => {
         socket.current?.emit("register", userId);
       });
 
-      socket.current.on("connect_error", (err: any) => {
+      interface ConnectError {
+        message: string;
+        name: string;
+        stack?: string;
+      }
+
+      socket.current.on("connect_error", (err: ConnectError) => {
         console.error("Socket connection error:", err);
       });
 

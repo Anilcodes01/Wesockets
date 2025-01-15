@@ -11,8 +11,7 @@ export default function Home() {
         {session?.user.name}
       </div>
       <span className="text-black">
-        LoggedIn user's Id:
-        {userId}
+        LoggedIn user&apos;s Id: {userId}
       </span>
     </div>
   );
