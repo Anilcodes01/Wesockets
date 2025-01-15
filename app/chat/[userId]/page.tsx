@@ -1,9 +1,10 @@
-'use client';
+"use client";
 
-import { useSocket } from '@/app/hooks/useSocket';
-import { useSession } from 'next-auth/react';
-import { useState, useEffect } from 'react';
-import { use } from 'react';
+import { useSocket } from "@/app/hooks/useSocket";
+import { useSession } from "next-auth/react";
+import { useState, useEffect } from "react";
+import { use } from "react";
+import { Message } from "@/app/types/message";
 
 interface PageProps {
   params: Promise<{ userId: string }>;
@@ -11,22 +12,51 @@ interface PageProps {
 
 export default function ChatPage({ params }: PageProps) {
   const resolvedParams = use(params);
-  const userId = resolvedParams.userId;
-  
-  const [messages, setMessages] = useState<any[]>([]);
-  const [newMessage, setNewMessage] = useState('');
-  const socket = useSocket();
-  const { data: session } = useSession();
+  const receiverId = resolvedParams.userId;
+
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [newMessage, setNewMessage] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const { data: session, status } = useSession();
+
+  const socket = useSocket(status === "authenticated" ? session?.user.id : "");
+
+  useEffect(() => {
+    if (session?.user.id && receiverId) {
+      fetch(
+        `/api/messages?senderId=${session.user.id}&receiverId=${receiverId}`
+      )
+        .then((res) => res.json())
+        .then((data) => {
+          setMessages(data);
+          setIsLoading(false);
+        })
+        .catch((err) => {
+          console.error("Error loading messages:", err);
+          setIsLoading(false);
+        });
+    }
+  }, [session?.user.id, receiverId]);
 
   useEffect(() => {
     if (!socket) return;
 
-    socket.on('receiveMessage', (message: any) => {
-      setMessages((prev) => [...prev, message]);
+    socket.on("receiveMessage", (message: Message) => {
+      setMessages((prev) => {
+        if (!prev.some((m) => m.id === message.id)) {
+          return [...prev, message];
+        }
+        return prev;
+      });
+    });
+
+    socket.on("messageError", (error: string) => {
+      console.error("Message error:", error);
     });
 
     return () => {
-      socket.off('receiveMessage');
+      socket.off("receiveMessage");
+      socket.off("messageError");
     };
   }, [socket]);
 
@@ -37,26 +67,41 @@ export default function ChatPage({ params }: PageProps) {
     const messageData = {
       content: newMessage,
       senderId: session.user.id,
-      receiverId: userId,
+      receiverId: receiverId,
     };
 
-    socket.emit('sendMessage', messageData);
-    setNewMessage('');
+    socket.emit("sendMessage", messageData);
+    setNewMessage("");
   };
+
+  if (status === "loading" || isLoading) {
+    return <div>Loading...</div>;
+  }
+
+  if (!session) {
+    return <div>Please sign in to continue</div>;
+  }
 
   return (
     <div className="flex flex-col bg-white text-black h-screen p-4">
-      <div className="flex-1 overflow-y-auto mb-4 space-y-4">
-        {messages.map((message, index) => (
+      <div className="text-black bg-sky-400 px-4 py-1 text-xl font-bold rounded-lg shadow-md">
+        Chat with {receiverId}
+      </div>
+
+      <div className="flex-1 overflow-y-auto mb-4 space-y-4 p-4">
+        {messages.map((message) => (
           <div
-            key={index}
+            key={message.id}
             className={`p-3 rounded-lg max-w-[70%] ${
-              message.senderId === session?.user.id
-                ? 'ml-auto bg-blue-500 text-white'
-                : 'bg-gray-200'
+              message.senderId === session.user.id
+                ? "ml-auto bg-blue-500 text-white"
+                : "bg-gray-200"
             }`}
           >
-            {message.content}
+            <div className="break-words">{message.content}</div>
+            <div className="text-xs mt-1 opacity-75">
+              {new Date(message.createdAt).toLocaleTimeString()}
+            </div>
           </div>
         ))}
       </div>
@@ -71,7 +116,7 @@ export default function ChatPage({ params }: PageProps) {
         />
         <button
           type="submit"
-          className="px-4 py-2 bg-blue-500 text-white rounded"
+          className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
           disabled={!newMessage.trim()}
         >
           Send
