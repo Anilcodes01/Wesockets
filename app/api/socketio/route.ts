@@ -1,7 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Server as NetServer } from "http";
-import { Server as SocketServer } from "socket.io";
+import { Server as SocketServer, Socket } from "socket.io";
 import { prisma } from "@/app/lib/prisma";
+
+// Extend NextRequest type for socket
+interface NextRequestWithSocket extends NextRequest {
+  socket: {
+    server: NetServer;
+  };
+}
 
 let io: SocketServer | null = null;
 
@@ -13,10 +20,12 @@ interface Message {
 
 const userSocketMap = new Map<string, Set<string>>();
 
-export const GET = async (req: NextRequest) => {
+export const GET = async (req: NextRequestWithSocket) => {
   if (!io) {
     console.log("Initializing Socket.IO server...");
-    const httpServer = (req as any).socket?.server as NetServer;
+
+    // Cast req.socket.server as NetServer
+    const httpServer = req.socket.server;
 
     io = new SocketServer(httpServer, {
       path: "/api/socketio",
@@ -27,7 +36,7 @@ export const GET = async (req: NextRequest) => {
       },
     });
 
-    io.on("connection", (socket) => {
+    io.on("connection", (socket: Socket) => {
       console.log("Client connected:", socket.id);
 
       socket.on("register", (userId: string) => {
