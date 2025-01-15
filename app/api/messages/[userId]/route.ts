@@ -1,12 +1,19 @@
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { prisma } from "@/app/lib/prisma";
 import { authOptions } from "@/app/lib/authOptions";
 
-export async function GET({ params }: { params: { userId: string } }) {
+export async function GET(req: NextRequest) {
+  const { searchParams } = new URL(req.url);
+  const userId = searchParams.get("userId");
   const session = await getServerSession(authOptions);
 
   if (!session?.user.id) {
-    return new Response("Unauthorized", { status: 401 });
+    return new NextResponse("Unauthorized", { status: 401 });
+  }
+
+  if (!userId) {
+    return new NextResponse("User ID is required", { status: 400 });
   }
 
   const messages = await prisma.message.findMany({
@@ -14,10 +21,10 @@ export async function GET({ params }: { params: { userId: string } }) {
       OR: [
         {
           senderId: session.user.id,
-          receiverId: params.userId,
+          receiverId: userId,
         },
         {
-          senderId: params.userId,
+          senderId: userId,
           receiverId: session.user.id,
         },
       ],
@@ -27,7 +34,5 @@ export async function GET({ params }: { params: { userId: string } }) {
     },
   });
 
-  return new Response(JSON.stringify(messages), {
-    headers: { "Content-Type": "application/json" },
-  });
+  return NextResponse.json(messages);
 }
