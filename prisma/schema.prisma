@@ -1,38 +1,43 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
+// schema.prisma
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "postgresql" // Adjust to your database
   url      = env("DATABASE_URL")
 }
 
 model User {
-  id               String    @id @default(cuid())
-  email            String    @unique
-  username         String    @unique
-  password         String
-  avatarUrl        String?
-  name             String
-  isActive         Boolean   @default(false)
-  lastSeen         DateTime  @default(now())
-  sentMessages     Message[] @relation("SentMessages")
-  receivedMessages Message[] @relation("ReceivedMessages")
+  id        String    @id @default(uuid()) @unique
+  name      String
+  email     String    @unique
+  password  String
+  username  String    @unique
+  avatarUrl String?   
+  messages  Message[] @relation("UserMessagesSent")
+  chats     Chat[]    @relation("UserChats")
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Chat {
+  id          String    @id @default(uuid()) @unique
+  userId      String
+  user        User      @relation("UserChats", fields: [userId], references: [id])
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  messages    Message[] @relation("ChatMessages")
 }
 
 model Message {
-  id         String   @id @default(cuid())
-  content    String
-  createdAt  DateTime @default(now())
-  senderId   String
-  receiverId String
-  status     String?
-  sender     User     @relation("SentMessages", fields: [senderId], references: [id])
-  receiver   User     @relation("ReceivedMessages", fields: [receiverId], references: [id])
+  id          String    @id @default(uuid()) @unique
+  senderId    String
+  receiverId  String
+  sender      User      @relation("UserMessagesSent", fields: [senderId], references: [id])
+  chatId      String
+  chat        Chat      @relation("ChatMessages", fields: [chatId], references: [id])
+  content     String
+  createdAt   DateTime  @default(now())
+  read        Boolean   @default(false)
 }

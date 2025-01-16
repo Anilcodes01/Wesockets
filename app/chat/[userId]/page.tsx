@@ -2,7 +2,7 @@
 
 import { useSocket } from "@/app/hooks/useSocket";
 import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { use } from "react";
 import { Message } from "@/app/types/message";
 
@@ -18,8 +18,19 @@ export default function ChatPage({ params }: PageProps) {
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const { data: session, status } = useSession();
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const socket = useSocket(status === "authenticated" ? session?.user.id : "");
+
+  // Function to scroll to bottom
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // Scroll to bottom when messages change
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
 
   useEffect(() => {
     if (session?.user.id && receiverId) {
@@ -30,6 +41,8 @@ export default function ChatPage({ params }: PageProps) {
         .then((data) => {
           setMessages(data);
           setIsLoading(false);
+          // Scroll to bottom after initial messages load
+          scrollToBottom();
         })
         .catch((err) => {
           console.error("Error loading messages:", err);
@@ -39,39 +52,53 @@ export default function ChatPage({ params }: PageProps) {
   }, [session?.user.id, receiverId]);
 
   useEffect(() => {
-    if (!socket) return;
+    if (socket) {
+      console.log("Socket connected:", socket.connected);
+      console.log("Session user ID:", session?.user.id);
+      console.log("Receiver ID:", receiverId);
 
-    socket.on("receiveMessage", (message: Message) => {
-      setMessages((prev) => {
-        if (!prev.some((m) => m.id === message.id)) {
-          return [...prev, message];
-        }
-        return prev;
+      // Listening for incoming messages
+      socket.on("receiveMessage", (message: Message) => {
+        console.log("Incoming message:", message);
+        setMessages((prevMessages) => [...prevMessages, message]);
       });
-    });
 
-    socket.on("messageError", (error: string) => {
-      console.error("Message error:", error);
-    });
+      // Listen for message saved confirmation
+      socket.on("messageSaved", (message: Message) => {
+        console.log("Message saved:", message);
+        setMessages((prevMessages) => [...prevMessages, message]);
+      });
 
-    return () => {
-      socket.off("receiveMessage");
-      socket.off("messageError");
-    };
-  }, [socket]);
+      // Cleanup listeners on component unmount
+      return () => {
+        socket.off("receiveMessage");
+        socket.off("messageSaved");
+      };
+    }
+  }, [socket, session?.user.id, receiverId]);
 
-  const sendMessage = (e: React.FormEvent) => {
+  const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!socket || !newMessage.trim() || !session?.user.id) return;
 
-    const messageData = {
+    console.log("Sending message:", {
       content: newMessage,
+      senderId: session.user.id,
+      receiverId: receiverId,
+    });
+
+    const messageData = {
+      content: newMessage.trim(),
       senderId: session.user.id,
       receiverId: receiverId,
     };
 
-    socket.emit("sendMessage", messageData);
-    setNewMessage("");
+    try {
+      socket.emit("sendMessage", messageData);
+      setNewMessage("");
+    } catch (error) {
+      console.error("Error sending message:", error);
+    }
   };
 
   if (status === "loading" || isLoading) {
@@ -104,6 +131,8 @@ export default function ChatPage({ params }: PageProps) {
             </div>
           </div>
         ))}
+        {/* Scroll anchor div */}
+        <div ref={messagesEndRef} />
       </div>
 
       <form onSubmit={sendMessage} className="flex gap-2">
