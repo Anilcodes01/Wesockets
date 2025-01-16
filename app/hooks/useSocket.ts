@@ -35,7 +35,7 @@ export const useSocket = (userId: string) => {
         socket.current?.emit("register", userId);
       });
 
-      socket.current.on("connect_error", (err: any) => {
+      socket.current.on("connect_error", (err: Error) => {
         console.error("Socket connection error:", err);
       });
 
