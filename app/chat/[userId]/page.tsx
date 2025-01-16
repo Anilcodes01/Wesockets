@@ -112,7 +112,7 @@ export default function ChatPage({ params }: PageProps) {
   return (
     <div className="flex flex-col bg-white text-black h-screen p-4">
       <div className="text-black bg-sky-400 px-4 py-1 text-xl font-bold rounded-lg shadow-md">
-        Chat with {receiverId}
+        Chat with user {receiverId}
       </div>
 
       <div className="flex-1 overflow-y-auto mb-4 space-y-4 p-4">
