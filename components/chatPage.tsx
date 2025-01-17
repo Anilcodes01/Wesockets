@@ -255,18 +255,18 @@ export default function ChatPage({
                     isCurrentUser ? "flex-row-reverse " : "flex-row"
                   }`}
                 >
-                  <div className={`flex-shrink-0 rounded-full ${isCurrentUser? 'absolute top-[-8px] right-[-8px] border-[3px] border-white': 'absolute top-[-8px] left-[-8px] border-[3px] border-white'}`}>
+                  <div className={`flex-shrink-0 rounded-full ${isCurrentUser? 'absolute bottom-[-8px] right-[-8px] border-[3px] border-white': 'absolute bottom-[-8px] left-[-8px] border-[3px] border-white'}`}>
                     {renderAvatar(isCurrentUser)}
                   </div>
                   <div
-                    className={`max-w-[70%] rounded-lg px-4 py-2 shadow-sm ${
+                    className={`max-w-[50%] rounded-lg px-2 min-w-[10%] py-2 shadow-sm ${
                       isCurrentUser
                         ? "bg-green-600 text-white "
-                        : "bg-gray-200 text-black "
+                        : "bg-[#F3F4F6] text-black "
                     }`}
                   >
-                    <p className="break-words pt-2">{message.content}</p>
-                    <span className="text-xs opacity-75 block mt-1">
+                    <p className={`break-words    ${isCurrentUser ? "" : "ml-3"}`}>{message.content}</p>
+                    <span className={`text-xs   mr-4 block  ${isCurrentUser ? "text-end text-[#fff]" : "text-start ml-3 text-[#5e5e5e]"}`}>
                       {(() => {
                         const date = new Date(message.createdAt);
                         let hours = date.getHours();
