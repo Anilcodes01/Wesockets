@@ -154,7 +154,7 @@ export default function ChatPage({
       </div>
 
       {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto bg-gray-50 p-4">
+      <div className="flex-1 bg-green-100  overflow-y-auto  p-4">
         {isLoading ? (
           <div className="flex justify-center pt-4">
             <Loader className="w-6 h-6 animate-spin text-blue-500" />
@@ -181,7 +181,7 @@ export default function ChatPage({
                 <div
                   className={`max-w-[70%] rounded-lg px-4  py-2 shadow-sm ${
                     message.senderId === session.user.id
-                      ? "bg-green-600 text-white rounded-br-[0px]"
+                      ? "bg-green-600  text-white rounded-br-[0px]"
                       : "bg-blue-500 text-white rounded-bl-[0px]"
                   }`}
                 >
