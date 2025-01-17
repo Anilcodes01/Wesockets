@@ -4,18 +4,24 @@ import { useSocket } from "@/app/hooks/useSocket";
 import { useSession } from "next-auth/react";
 import { useState, useEffect, useRef } from "react";
 import { Message } from "@/app/types/message";
-import { Send, Loader, User, MessageSquare } from "lucide-react";
+import { Send, Loader, MessageSquare,ChevronLeft , User as UserIcon } from "lucide-react";
+import { Phone } from "lucide-react";
+import { Video } from "lucide-react";
+import { EllipsisVertical } from "lucide-react";
+
 
 interface ChatProps {
   selectedUserId: string | null;
   selectedUserName: string | null;
   selectedUserAvatarUrl: string | null;
+  onBack?: () => void;
 }
 
 export default function ChatPage({
   selectedUserId,
   selectedUserName,
   selectedUserAvatarUrl,
+  onBack
 }: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
@@ -173,7 +179,7 @@ export default function ChatPage({
   if (status === "loading") {
     return (
       <div className="flex items-center justify-center h-full">
-        <Loader className="w-8 h-8 animate-spin text-blue-500" />
+        <Loader className="w-8 h-8 animate-spin text-gree-600" />
       </div>
     );
   }
@@ -195,37 +201,52 @@ export default function ChatPage({
 
   if (!selectedUserId) {
     return (
-      <div className="flex flex-col items-center justify-center h-full bg-gray-50">
-        <User className="w-16 h-16 text-gray-400 mb-4" />
-        <h2 className="text-xl font-semibold text-gray-800">Select a User</h2>
-        <p className="mt-2 text-gray-600">
-          Choose someone to start chatting with
-        </p>
+      <div>
+        <div className=" hidden md:flex flex-col items-center justify-center h-full bg-gray-50">
+          <UserIcon className="w-16 h-16 text-gray-400 mb-4" />
+          <h2 className="text-xl font-semibold text-gray-800">Select a User</h2>
+          <p className="mt-2 text-gray-600">
+            Choose someone to start chatting with
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col h-full">
-      <div className="px-4 py-3 bg-white border-b flex gap-2 items-center border-gray-200">
-        <div className="flex-shrink-0">
-          {selectedUserAvatarUrl ? (
-            <img
-              src={selectedUserAvatarUrl}
-              alt={selectedUserName || "User"}
-              className="h-8 w-8 rounded-full"
-            />
-          ) : (
-            <div className="h-8 w-8 rounded-full bg-green-200 flex items-center justify-center">
-              <span className="text-green-600 font-medium text-lg">
-                {selectedUserName?.charAt(0)}
-              </span>
-            </div>
-          )}
+    <div className="flex flex-col  h-full">
+      <div className="  px-4 py-3 bg-white border-b flex justify-between items-center border-gray-200">
+        <div className="flex items-center gap-2">
+        <button 
+            onClick={onBack}
+            className="md:hidden p-1 hover:bg-gray-100 rounded-full"
+          >
+            <ChevronLeft className="w-6 h-6 text-gray-600" />
+          </button>
+          <div className="flex-shrink-0">
+            {selectedUserAvatarUrl ? (
+              <img
+                src={selectedUserAvatarUrl}
+                alt={selectedUserName || "User"}
+                className="h-8 w-8 rounded-full"
+              />
+            ) : (
+              <div className="h-8 w-8 rounded-full bg-green-200 flex items-center justify-center">
+                <span className="text-green-600 font-medium text-lg">
+                  {selectedUserName?.charAt(0)}
+                </span>
+              </div>
+            )}
+          </div>
+          <h2 className="text-lg font-semibold text-gray-800">
+            {selectedUserName || "Unknown User"}
+          </h2>
         </div>
-        <h2 className="text-lg font-semibold text-gray-800">
-          {selectedUserName || "Unknown User"}
-        </h2>
+        <div className="flex items-center gap-4 text-gray-500 text-sm">
+          <Phone className="cursor-pointer" size={20} />
+          <Video className="cursor-pointer" size={20} />
+          <EllipsisVertical className="cursor-pointer" size={20} />
+        </div>
       </div>
 
       <div
@@ -255,18 +276,36 @@ export default function ChatPage({
                     isCurrentUser ? "flex-row-reverse " : "flex-row"
                   }`}
                 >
-                  <div className={`flex-shrink-0 rounded-full ${isCurrentUser? 'absolute bottom-[-8px] right-[-8px] border-[3px] border-white': 'absolute bottom-[-8px] left-[-8px] border-[3px] border-white'}`}>
+                  <div
+                    className={`flex-shrink-0 rounded-full ${
+                      isCurrentUser
+                        ? "absolute bottom-[-8px] right-[-8px] border-[3px] border-white"
+                        : "absolute bottom-[-8px] left-[-8px] border-[3px] border-white"
+                    }`}
+                  >
                     {renderAvatar(isCurrentUser)}
                   </div>
                   <div
-                    className={`max-w-[50%] rounded-lg px-2 min-w-[10%] py-2 shadow-sm ${
+                    className={`max-w-[70%] rounded-lg px-2 min-w-[10%] py-2 shadow-sm ${
                       isCurrentUser
                         ? "bg-green-600 text-white "
                         : "bg-[#F3F4F6] text-black "
                     }`}
                   >
-                    <p className={`break-words    ${isCurrentUser ? "" : "ml-3"}`}>{message.content}</p>
-                    <span className={`text-xs   mr-4 block  ${isCurrentUser ? "text-end text-[#fff]" : "text-start ml-3 text-[#5e5e5e]"}`}>
+                    <p
+                      className={`break-words    ${
+                        isCurrentUser ? "" : "ml-3"
+                      }`}
+                    >
+                      {message.content}
+                    </p>
+                    <span
+                      className={`text-xs   mr-4 block  ${
+                        isCurrentUser
+                          ? "text-end text-[#fff]"
+                          : "text-start ml-3 text-[#5e5e5e]"
+                      }`}
+                    >
                       {(() => {
                         const date = new Date(message.createdAt);
                         let hours = date.getHours();
@@ -287,7 +326,7 @@ export default function ChatPage({
         )}
       </div>
 
-      <div className="bg-white border-t border-gray-200 p-4">
+      <div className="bg-white border-t mb-16 border-gray-200 p-4">
         <form onSubmit={sendMessage} className="flex space-x-2">
           <input
             type="text"
