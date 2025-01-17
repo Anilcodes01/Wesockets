@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, ReactNode } from 'react';
+import { useState } from 'react';
 import { User } from 'next-auth';
 import ChatPage from './[userId]/page';
 import Sidebar from '@/components/Sidebar';
