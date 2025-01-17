@@ -141,8 +141,8 @@ export default function ChatPage({
               className="h-8 w-8 rounded-full"
             />
           ) : (
-            <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
-              <span className="text-blue-600 font-medium text-lg">
+            <div className="h-8 w-8 rounded-full bg-green-200 flex items-center justify-center">
+              <span className="text-green-600 font-medium text-lg">
                 {selectedUserName?.charAt(0)}
               </span>
             </div>
@@ -181,8 +181,8 @@ export default function ChatPage({
                 <div
                   className={`max-w-[70%] rounded-lg px-4  py-2 shadow-sm ${
                     message.senderId === session.user.id
-                      ? "bg-blue-500 text-white rounded-br-[0px]"
-                      : "bg-white text-gray-800 rounded-bl-[0px]"
+                      ? "bg-green-600 text-white rounded-br-[0px]"
+                      : "bg-blue-500 text-white rounded-bl-[0px]"
                   }`}
                 >
                   <p className="break-words">{message.content}</p>
