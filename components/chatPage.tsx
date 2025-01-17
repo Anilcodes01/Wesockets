@@ -21,9 +21,50 @@ export default function ChatPage({
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const { data: session, status } = useSession();
-  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const messageContainerRef = useRef<HTMLDivElement>(null);
+  const [shouldScrollSmooth, setShouldScrollSmooth] = useState(true);
+  console.log(shouldScrollSmooth);
 
   const socket = useSocket(status === "authenticated" ? session?.user.id : "");
+
+  const scrollToBottom = (smooth = true) => {
+    if (messageContainerRef.current) {
+      messageContainerRef.current.scrollTo({
+        top: messageContainerRef.current.scrollHeight,
+        behavior: smooth ? "smooth" : "auto",
+      });
+    }
+  };
+
+  useEffect(() => {
+    if (selectedUserId) {
+      setShouldScrollSmooth(false);
+
+      scrollToBottom(false);
+    }
+  }, [selectedUserId]);
+
+  useEffect(() => {
+    if (!messages.length) return;
+
+    const container = messageContainerRef.current;
+    if (!container) return;
+
+    const isScrolledToBottom = () => {
+      const threshold = 100;
+      return (
+        container.scrollHeight - container.scrollTop - container.clientHeight <=
+        threshold
+      );
+    };
+
+    if (isScrolledToBottom() || messages.length <= 1) {
+      setTimeout(() => {
+        scrollToBottom(true);
+      }, 50);
+    }
+  }, [messages]);
 
   useEffect(() => {
     if (session?.user.id && selectedUserId) {
@@ -34,6 +75,10 @@ export default function ChatPage({
         .then((res) => res.json())
         .then((data) => {
           setMessages(data);
+
+          setTimeout(() => {
+            scrollToBottom(true);
+          }, 100);
         })
         .catch((err) => {
           console.error("Error loading messages:", err);
@@ -131,7 +176,6 @@ export default function ChatPage({
 
   return (
     <div className="flex flex-col h-full">
-      {/* Chat Header */}
       <div className="px-4 py-3 bg-white border-b flex gap-2 items-center border-gray-200">
         <div className="flex-shrink-0">
           {selectedUserAvatarUrl || "" ? (
@@ -149,12 +193,14 @@ export default function ChatPage({
           )}
         </div>
         <h2 className="text-lg font-semibold text-gray-800">
-        {selectedUserName || "Unknown User"}
+          {selectedUserName || "Unknown User"}
         </h2>
       </div>
 
-      {/* Messages Container */}
-      <div className="flex-1 bg-green-100  overflow-y-auto  p-4">
+      <div
+        ref={messageContainerRef}
+        className="flex-1 hide-scrollbar bg-green-100 overflow-y-auto p-4"
+      >
         {isLoading ? (
           <div className="flex justify-center pt-4">
             <Loader className="w-6 h-6 animate-spin text-blue-500" />
@@ -179,9 +225,9 @@ export default function ChatPage({
                 }`}
               >
                 <div
-                  className={`max-w-[70%] rounded-lg px-4  py-2 shadow-sm ${
+                  className={`max-w-[70%] rounded-lg px-4 py-2 shadow-sm ${
                     message.senderId === session.user.id
-                      ? "bg-green-600  text-white rounded-br-[0px]"
+                      ? "bg-green-600 text-white rounded-br-[0px]"
                       : "bg-blue-500 text-white rounded-bl-[0px]"
                   }`}
                 >
@@ -192,12 +238,10 @@ export default function ChatPage({
                 </div>
               </div>
             ))}
-            <div ref={messagesEndRef} />
           </div>
         )}
       </div>
 
-      {/* Message Input */}
       <div className="bg-white border-t border-gray-200 p-4">
         <form onSubmit={sendMessage} className="flex space-x-2">
           <input

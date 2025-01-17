@@ -25,3 +25,12 @@ body {
   background-size: cover;
   background-repeat: no-repeat;
 }
+
+.hide-scrollbar {
+  overflow: scroll; /* Allows scrolling */
+  scrollbar-width: none; /* For Firefox */
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* For Chrome, Safari, and Edge */
+}
