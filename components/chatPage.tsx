@@ -19,12 +19,12 @@ export default function ChatPage({ selectedUserId }: ChatProps) {
 
   const socket = useSocket(status === "authenticated" ? session?.user.id : "");
 
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+//   const scrollToBottom = () => {
+//     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+//   };
 
   useEffect(() => {
-    scrollToBottom();
+    // scrollToBottom();
   }, [messages]);
 
   useEffect(() => {
@@ -36,7 +36,7 @@ export default function ChatPage({ selectedUserId }: ChatProps) {
         .then((res) => res.json())
         .then((data) => {
           setMessages(data);
-          scrollToBottom();
+        //   scrollToBottom();
         })
         .catch((err) => {
           console.error("Error loading messages:", err);
@@ -192,7 +192,7 @@ export default function ChatPage({ selectedUserId }: ChatProps) {
             type="text"
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
-            className="flex-1 rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            className="flex-1 text-black rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             placeholder="Type your message..."
           />
           <button
