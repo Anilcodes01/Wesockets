@@ -179,10 +179,10 @@ export default function ChatPage({
                 }`}
               >
                 <div
-                  className={`max-w-[70%] rounded-lg px-4 py-2 shadow-sm ${
+                  className={`max-w-[70%] rounded-lg px-4  py-2 shadow-sm ${
                     message.senderId === session.user.id
-                      ? "bg-blue-500 text-white"
-                      : "bg-white text-gray-800"
+                      ? "bg-blue-500 text-white rounded-br-[0px]"
+                      : "bg-white text-gray-800 rounded-bl-[0px]"
                   }`}
                 >
                   <p className="break-words">{message.content}</p>
