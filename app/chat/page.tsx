@@ -7,7 +7,7 @@ import Sidebar from '@/components/Sidebar';
 import Users from '@/components/UsersBar';
 
 
-const ChatLayout = ({ children }: { children: ReactNode }) => {
+const ChatLayout = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
 
   return (
