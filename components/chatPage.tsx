@@ -147,8 +147,8 @@ export default function ChatPage({
           className="h-8 w-8 rounded-full"
         />
       ) : (
-        <div className="h-8 w-8 rounded-full bg-blue-200 flex items-center justify-center">
-          <span className="text-blue-600 font-medium text-sm">
+        <div className="h-6 w-6 rounded-full bg-blue-200 flex items-center justify-center">
+          <span className="text-blue-600  font-medium text-sm">
             {session?.user?.name?.charAt(0) || "Y"}
           </span>
         </div>
@@ -161,7 +161,7 @@ export default function ChatPage({
           className="h-8 w-8 rounded-full"
         />
       ) : (
-        <div className="h-8 w-8 rounded-full bg-green-200 flex items-center justify-center">
+        <div className="h-6 w-6 rounded-full bg-green-200 flex items-center justify-center">
           <span className="text-green-600 font-medium text-sm">
             {selectedUserName?.charAt(0) || "U"}
           </span>
@@ -251,11 +251,11 @@ export default function ChatPage({
               return (
                 <div
                   key={message.id}
-                  className={`flex items- gap-2 ${
-                    isCurrentUser ? "flex-row-reverse" : "flex-row"
+                  className={`flex relative  gap-2 ${
+                    isCurrentUser ? "flex-row-reverse " : "flex-row"
                   }`}
                 >
-                  <div className="flex-shrink-0">
+                  <div className={`flex-shrink-0 rounded-full ${isCurrentUser? 'absolute top-[-8px] right-[-8px] border-[3px] border-white': 'absolute top-[-8px] left-[-8px] border-[3px] border-white'}`}>
                     {renderAvatar(isCurrentUser)}
                   </div>
                   <div
@@ -265,7 +265,7 @@ export default function ChatPage({
                         : "bg-gray-200 text-black "
                     }`}
                   >
-                    <p className="break-words">{message.content}</p>
+                    <p className="break-words pt-2">{message.content}</p>
                     <span className="text-xs opacity-75 block mt-1">
                       {(() => {
                         const date = new Date(message.createdAt);
