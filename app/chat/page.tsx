@@ -2,10 +2,9 @@
 
 import { useState } from 'react';
 import { User } from 'next-auth';
-import ChatPage from './[userId]/page';
+import ChatPage from "../../components/chatPage";
 import Sidebar from '@/components/Sidebar';
 import Users from '@/components/UsersBar';
-
 
 const ChatLayout = () => {
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -22,15 +21,15 @@ const ChatLayout = () => {
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col mt-16 overflow-hidden">
-        <main className="flex-1 flex">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <main className="flex-1 flex h-screen">
           {/* Chat Area */}
-          <div className="flex-1 mt-16 flex flex-col bg-white">
+          <div className="flex-1 flex flex-col bg-white">
             <ChatPage selectedUserId={selectedUser?.id || null} />
           </div>
 
           {/* Users Sidebar - Desktop only */}
-          <div className="hidden mt-16 lg:flex lg:flex-col w-64 border-l border-gray-200 bg-white">
+          <div className="hidden lg:flex lg:flex-col w-64 border-l border-gray-200 bg-white">
             <div className="flex-1 flex flex-col min-h-0">
               <div className="p-4 border-b border-gray-200">
                 <h2 className="text-lg font-medium text-gray-900">Active Users</h2>
