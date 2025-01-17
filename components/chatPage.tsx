@@ -24,6 +24,7 @@ export default function ChatPage({
 
   const messageContainerRef = useRef<HTMLDivElement>(null);
   const [shouldScrollSmooth, setShouldScrollSmooth] = useState(true);
+
   console.log(shouldScrollSmooth);
 
   const socket = useSocket(status === "authenticated" ? session?.user.id : "");
@@ -40,7 +41,6 @@ export default function ChatPage({
   useEffect(() => {
     if (selectedUserId) {
       setShouldScrollSmooth(false);
-
       scrollToBottom(false);
     }
   }, [selectedUserId]);
@@ -75,7 +75,6 @@ export default function ChatPage({
         .then((res) => res.json())
         .then((data) => {
           setMessages(data);
-
           setTimeout(() => {
             scrollToBottom(true);
           }, 100);
@@ -139,6 +138,38 @@ export default function ChatPage({
     }
   };
 
+  const renderAvatar = (isCurrentUser: boolean) => {
+    if (isCurrentUser) {
+      return session?.user?.avatarUrl ? (
+        <img
+          src={session.user.avatarUrl}
+          alt="Your avatar"
+          className="h-8 w-8 rounded-full"
+        />
+      ) : (
+        <div className="h-8 w-8 rounded-full bg-blue-200 flex items-center justify-center">
+          <span className="text-blue-600 font-medium text-sm">
+            {session?.user?.name?.charAt(0) || "Y"}
+          </span>
+        </div>
+      );
+    } else {
+      return selectedUserAvatarUrl ? (
+        <img
+          src={selectedUserAvatarUrl}
+          alt={`${selectedUserName}'s avatar`}
+          className="h-8 w-8 rounded-full"
+        />
+      ) : (
+        <div className="h-8 w-8 rounded-full bg-green-200 flex items-center justify-center">
+          <span className="text-green-600 font-medium text-sm">
+            {selectedUserName?.charAt(0) || "U"}
+          </span>
+        </div>
+      );
+    }
+  };
+
   if (status === "loading") {
     return (
       <div className="flex items-center justify-center h-full">
@@ -178,9 +209,9 @@ export default function ChatPage({
     <div className="flex flex-col h-full">
       <div className="px-4 py-3 bg-white border-b flex gap-2 items-center border-gray-200">
         <div className="flex-shrink-0">
-          {selectedUserAvatarUrl || "" ? (
+          {selectedUserAvatarUrl ? (
             <img
-              src={selectedUserAvatarUrl || ""}
+              src={selectedUserAvatarUrl}
               alt={selectedUserName || "User"}
               className="h-8 w-8 rounded-full"
             />
@@ -199,7 +230,7 @@ export default function ChatPage({
 
       <div
         ref={messageContainerRef}
-        className="flex-1 hide-scrollbar bg-green-100 overflow-y-auto p-4"
+        className="flex-1 hide-scrollbar bg-white overflow-y-auto p-4"
       >
         {isLoading ? (
           <div className="flex justify-center pt-4">
@@ -215,29 +246,43 @@ export default function ChatPage({
           </div>
         ) : (
           <div className="space-y-4">
-            {messages.map((message) => (
-              <div
-                key={message.id}
-                className={`flex ${
-                  message.senderId === session.user.id
-                    ? "justify-end"
-                    : "justify-start"
-                }`}
-              >
+            {messages.map((message) => {
+              const isCurrentUser = message.senderId === session.user.id;
+              return (
                 <div
-                  className={`max-w-[70%] rounded-lg px-4 py-2 shadow-sm ${
-                    message.senderId === session.user.id
-                      ? "bg-green-600 text-white rounded-br-[0px]"
-                      : "bg-blue-500 text-white rounded-bl-[0px]"
+                  key={message.id}
+                  className={`flex items- gap-2 ${
+                    isCurrentUser ? "flex-row-reverse" : "flex-row"
                   }`}
                 >
-                  <p className="break-words">{message.content}</p>
-                  <span className="text-xs opacity-75 block mt-1">
-                    {new Date(message.createdAt).toLocaleTimeString()}
-                  </span>
+                  <div className="flex-shrink-0">
+                    {renderAvatar(isCurrentUser)}
+                  </div>
+                  <div
+                    className={`max-w-[70%] rounded-lg px-4 py-2 shadow-sm ${
+                      isCurrentUser
+                        ? "bg-green-600 text-white "
+                        : "bg-gray-200 text-black "
+                    }`}
+                  >
+                    <p className="break-words">{message.content}</p>
+                    <span className="text-xs opacity-75 block mt-1">
+                      {(() => {
+                        const date = new Date(message.createdAt);
+                        let hours = date.getHours();
+                        const minutes = date
+                          .getMinutes()
+                          .toString()
+                          .padStart(2, "0");
+                        const ampm = hours >= 12 ? "PM" : "AM";
+                        hours = hours % 12 || 12;
+                        return `${hours}:${minutes} ${ampm}`;
+                      })()}
+                    </span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
