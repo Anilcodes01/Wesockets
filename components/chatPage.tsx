@@ -8,9 +8,15 @@ import { Send, Loader, User, MessageSquare } from "lucide-react";
 
 interface ChatProps {
   selectedUserId: string | null;
+  selectedUserName: string | null;
+  selectedUserAvatarUrl: string | null;
 }
 
-export default function ChatPage({ selectedUserId }: ChatProps) {
+export default function ChatPage({
+  selectedUserId,
+  selectedUserName,
+  selectedUserAvatarUrl,
+}: ChatProps) {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -18,14 +24,6 @@ export default function ChatPage({ selectedUserId }: ChatProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const socket = useSocket(status === "authenticated" ? session?.user.id : "");
-
-//   const scrollToBottom = () => {
-//     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-//   };
-
-  useEffect(() => {
-    // scrollToBottom();
-  }, [messages]);
 
   useEffect(() => {
     if (session?.user.id && selectedUserId) {
@@ -36,7 +34,6 @@ export default function ChatPage({ selectedUserId }: ChatProps) {
         .then((res) => res.json())
         .then((data) => {
           setMessages(data);
-        //   scrollToBottom();
         })
         .catch((err) => {
           console.error("Error loading messages:", err);
@@ -135,9 +132,24 @@ export default function ChatPage({ selectedUserId }: ChatProps) {
   return (
     <div className="flex flex-col h-full">
       {/* Chat Header */}
-      <div className="px-4 py-3 bg-white border-b border-gray-200">
+      <div className="px-4 py-3 bg-white border-b flex gap-2 items-center border-gray-200">
+        <div className="flex-shrink-0">
+          {selectedUserAvatarUrl || "" ? (
+            <img
+              src={selectedUserAvatarUrl || ""}
+              alt={selectedUserName || "User"}
+              className="h-8 w-8 rounded-full"
+            />
+          ) : (
+            <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center">
+              <span className="text-blue-600 font-medium text-lg">
+                {selectedUserName?.charAt(0)}
+              </span>
+            </div>
+          )}
+        </div>
         <h2 className="text-lg font-semibold text-gray-800">
-          Chat with {selectedUserId}
+        {selectedUserName || "Unknown User"}
         </h2>
       </div>
 

@@ -25,7 +25,7 @@ const ChatLayout = () => {
         <main className="flex-1 flex h-screen">
           {/* Chat Area */}
           <div className="flex-1 flex flex-col bg-white">
-            <ChatPage selectedUserId={selectedUser?.id || null} />
+            <ChatPage selectedUserId={selectedUser?.id || null} selectedUserName={selectedUser?.name || ""} selectedUserAvatarUrl={selectedUser?.avatarUrl || ""}/>
           </div>
 
           {/* Users Sidebar - Desktop only */}
