@@ -1,14 +1,12 @@
 "use client";
-
-import { useSocket } from "@/app/hooks/useSocket";
 import { useSession } from "next-auth/react";
-import { useState, useEffect, useRef } from "react";
-import { Message } from "@/app/types/message";
-import { Send, Loader, MessageSquare,ChevronLeft , User as UserIcon } from "lucide-react";
-import { Phone } from "lucide-react";
-import { Video } from "lucide-react";
-import { EllipsisVertical } from "lucide-react";
-
+import { useState, useEffect } from "react";
+import { MessageBubble } from "./MessageBubble";
+import { EmptyChat } from "./EmptyChat";
+import { ChatHeader } from "./ChatHeader";
+import { MessageInput } from "./MessageInput";
+import { useMessages } from "@/app/hooks/useMessages";
+import { useScrollToBottom } from "@/app/hooks/useScrollToBottom";
 
 interface ChatProps {
   selectedUserId: string | null;
@@ -21,109 +19,42 @@ export default function ChatPage({
   selectedUserId,
   selectedUserName,
   selectedUserAvatarUrl,
-  onBack
+  onBack,
 }: ChatProps) {
-  const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
   const { data: session, status } = useSession();
-
-  const messageContainerRef = useRef<HTMLDivElement>(null);
-  const [shouldScrollSmooth, setShouldScrollSmooth] = useState(true);
-
-  console.log(shouldScrollSmooth);
-
-  const socket = useSocket(status === "authenticated" ? session?.user.id : "");
-
-  const scrollToBottom = (smooth = true) => {
-    if (messageContainerRef.current) {
-      messageContainerRef.current.scrollTo({
-        top: messageContainerRef.current.scrollHeight,
-        behavior: smooth ? "smooth" : "auto",
-      });
-    }
-  };
+  const { messages, isLoading, socket } = useMessages(selectedUserId);
+  const { messageContainerRef, scrollToBottom, isScrolledToBottom } =
+    useScrollToBottom();
 
   useEffect(() => {
     if (selectedUserId) {
-      setShouldScrollSmooth(false);
-      scrollToBottom(false);
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
     }
-  }, [selectedUserId]);
+  }, [selectedUserId, scrollToBottom]);
 
   useEffect(() => {
     if (!messages.length) return;
 
-    const container = messageContainerRef.current;
-    if (!container) return;
-
-    const isScrolledToBottom = () => {
-      const threshold = 100;
-      return (
-        container.scrollHeight - container.scrollTop - container.clientHeight <=
-        threshold
-      );
-    };
-
-    if (isScrolledToBottom() || messages.length <= 1) {
+    const shouldScroll =
+      isScrolledToBottom() ||
+      messages[messages.length - 1].senderId === session?.user.id;
+    if (shouldScroll) {
       setTimeout(() => {
-        scrollToBottom(true);
-      }, 50);
+        scrollToBottom();
+      }, 100);
     }
-  }, [messages]);
+  }, [messages, scrollToBottom, isScrolledToBottom, session?.user.id]);
 
   useEffect(() => {
-    if (session?.user.id && selectedUserId) {
-      setIsLoading(true);
-      fetch(
-        `/api/messages?senderId=${session.user.id}&receiverId=${selectedUserId}`
-      )
-        .then((res) => res.json())
-        .then((data) => {
-          setMessages(data);
-          setTimeout(() => {
-            scrollToBottom(true);
-          }, 100);
-        })
-        .catch((err) => {
-          console.error("Error loading messages:", err);
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
-    } else {
-      setMessages([]);
+    if (!isLoading && messages.length > 0) {
+      setTimeout(() => {
+        scrollToBottom();
+      }, 100);
     }
-  }, [session?.user.id, selectedUserId]);
-
-  useEffect(() => {
-    if (socket) {
-      socket.on("receiveMessage", (message: Message) => {
-        if (
-          message.senderId === selectedUserId ||
-          (message.senderId === session?.user.id &&
-            message.receiverId === selectedUserId)
-        ) {
-          setMessages((prevMessages) => [...prevMessages, message]);
-        }
-      });
-
-      socket.on("messageSaved", (message: Message) => {
-        if (
-          message.senderId === selectedUserId ||
-          (message.senderId === session?.user.id &&
-            message.receiverId === selectedUserId)
-        ) {
-          setMessages((prevMessages) => [...prevMessages, message]);
-        }
-      });
-
-      return () => {
-        socket.off("receiveMessage");
-        socket.off("messageSaved");
-      };
-    }
-  }, [socket, selectedUserId, session?.user.id]);
+  }, [isLoading, messages.length, scrollToBottom]);
 
   const sendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -176,174 +107,45 @@ export default function ChatPage({
     }
   };
 
-  if (status === "loading") {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <Loader className="w-8 h-8 animate-spin text-gree-600" />
-      </div>
-    );
-  }
-
-  if (!session) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="text-center">
-          <h2 className="text-xl font-semibold text-gray-800">
-            Please Sign In
-          </h2>
-          <p className="mt-2 text-gray-600">
-            You need to be signed in to access the chat.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!selectedUserId) {
-    return (
-      <div>
-        <div className=" hidden md:flex flex-col items-center justify-center h-full bg-gray-50">
-          <UserIcon className="w-16 h-16 text-gray-400 mb-4" />
-          <h2 className="text-xl font-semibold text-gray-800">Select a User</h2>
-          <p className="mt-2 text-gray-600">
-            Choose someone to start chatting with
-          </p>
-        </div>
-      </div>
-    );
-  }
+  if (status === "loading") return <EmptyChat type="loading" />;
+  if (!session) return <EmptyChat type="no-session" />;
+  if (!selectedUserId) return <EmptyChat type="no-user" />;
 
   return (
-    <div className="flex flex-col  h-full">
-      <div className="  px-4 py-3 bg-white border-b flex justify-between items-center border-gray-200">
-        <div className="flex items-center gap-2">
-        <button 
-            onClick={onBack}
-            className="md:hidden p-1 hover:bg-gray-100 rounded-full"
-          >
-            <ChevronLeft className="w-6 h-6 text-gray-600" />
-          </button>
-          <div className="flex-shrink-0">
-            {selectedUserAvatarUrl ? (
-              <img
-                src={selectedUserAvatarUrl}
-                alt={selectedUserName || "User"}
-                className="h-8 w-8 rounded-full"
-              />
-            ) : (
-              <div className="h-8 w-8 rounded-full bg-green-200 flex items-center justify-center">
-                <span className="text-green-600 font-medium text-lg">
-                  {selectedUserName?.charAt(0)}
-                </span>
-              </div>
-            )}
-          </div>
-          <h2 className="text-lg font-semibold text-gray-800">
-            {selectedUserName || "Unknown User"}
-          </h2>
-        </div>
-        <div className="flex items-center gap-4 text-gray-500 text-sm">
-          <Phone className="cursor-pointer" size={20} />
-          <Video className="cursor-pointer" size={20} />
-          <EllipsisVertical className="cursor-pointer" size={20} />
-        </div>
-      </div>
+    <div className="flex flex-col h-full">
+      <ChatHeader
+        selectedUserAvatarUrl={selectedUserAvatarUrl}
+        selectedUserName={selectedUserName}
+        onBack={onBack}
+      />
 
       <div
         ref={messageContainerRef}
-        className="flex-1 hide-scrollbar bg-white overflow-y-auto p-4"
+        className="flex-1 hide-scrollbar bg-white overflow-y-auto p-4 scroll-smooth"
       >
         {isLoading ? (
-          <div className="flex justify-center pt-4">
-            <Loader className="w-6 h-6 animate-spin text-blue-500" />
-          </div>
+          <EmptyChat type="loading" />
         ) : messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full">
-            <MessageSquare className="w-16 h-16 text-gray-400 mb-4" />
-            <h3 className="text-lg font-semibold text-gray-800">
-              No messages yet
-            </h3>
-            <p className="text-gray-600">Send a message to start chatting</p>
-          </div>
+          <EmptyChat type="no-messages" />
         ) : (
           <div className="space-y-4">
-            {messages.map((message) => {
-              const isCurrentUser = message.senderId === session.user.id;
-              return (
-                <div
-                  key={message.id}
-                  className={`flex relative  gap-2 ${
-                    isCurrentUser ? "flex-row-reverse " : "flex-row"
-                  }`}
-                >
-                  <div
-                    className={`flex-shrink-0 rounded-full ${
-                      isCurrentUser
-                        ? "absolute bottom-[-8px] right-[-8px] border-[3px] border-white"
-                        : "absolute bottom-[-8px] left-[-8px] border-[3px] border-white"
-                    }`}
-                  >
-                    {renderAvatar(isCurrentUser)}
-                  </div>
-                  <div
-                    className={`max-w-[70%] rounded-lg px-2 min-w-[10%] py-2 shadow-sm ${
-                      isCurrentUser
-                        ? "bg-green-600 text-white "
-                        : "bg-[#F3F4F6] text-black "
-                    }`}
-                  >
-                    <p
-                      className={`break-words    ${
-                        isCurrentUser ? "" : "ml-3"
-                      }`}
-                    >
-                      {message.content}
-                    </p>
-                    <span
-                      className={`text-xs   mr-4 block  ${
-                        isCurrentUser
-                          ? "text-end text-[#fff]"
-                          : "text-start ml-3 text-[#5e5e5e]"
-                      }`}
-                    >
-                      {(() => {
-                        const date = new Date(message.createdAt);
-                        let hours = date.getHours();
-                        const minutes = date
-                          .getMinutes()
-                          .toString()
-                          .padStart(2, "0");
-                        const ampm = hours >= 12 ? "PM" : "AM";
-                        hours = hours % 12 || 12;
-                        return `${hours}:${minutes} ${ampm}`;
-                      })()}
-                    </span>
-                  </div>
-                </div>
-              );
-            })}
+            {messages.map((message) => (
+              <MessageBubble
+                key={message.id}
+                message={message}
+                isCurrentUser={message.senderId === session.user.id}
+                renderAvatar={renderAvatar}
+              />
+            ))}
           </div>
         )}
       </div>
 
-      <div className="bg-white border-t mb-16 border-gray-200 p-4">
-        <form onSubmit={sendMessage} className="flex space-x-2">
-          <input
-            type="text"
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            className="flex-1 text-black rounded-lg border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            placeholder="Type your message..."
-          />
-          <button
-            type="submit"
-            disabled={!newMessage.trim()}
-            className="bg-blue-500 text-white rounded-lg px-4 py-2 hover:bg-blue-600 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Send className="w-5 h-5" />
-          </button>
-        </form>
-      </div>
+      <MessageInput
+        newMessage={newMessage}
+        setNewMessage={setNewMessage}
+        onSubmit={sendMessage}
+      />
     </div>
   );
 }

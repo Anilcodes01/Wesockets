@@ -1,12 +1,21 @@
-import { Phone, Video, EllipsisVertical } from "lucide-react";
-import { ChatHeaderProps } from '../app/types/types';
+import { Phone, Video, EllipsisVertical, ChevronLeft } from "lucide-react";
+import { ChatHeaderProps } from "../app/types/types";
 
-
-
-export function ChatHeader({ selectedUserName, selectedUserAvatarUrl }: ChatHeaderProps) {
+export function ChatHeader({
+  selectedUserName,
+  selectedUserAvatarUrl,
+  onBack,
+}: ChatHeaderProps) {
   return (
     <div className="px-4 py-3 bg-white border-b flex justify-between items-center border-gray-200">
       <div className="flex items-center gap-4">
+        <button
+          onClick={onBack}
+          className="md:hidden p-1 hover:bg-gray-100 rounded-full"
+        >
+          <ChevronLeft className="w-6 h-6 text-gray-600" />
+        </button>
+
         <div className="flex-shrink-0">
           {selectedUserAvatarUrl ? (
             <img

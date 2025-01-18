@@ -25,6 +25,7 @@ export interface ChatProps {
 export interface ChatHeaderProps {
   selectedUserName: string | null;
   selectedUserAvatarUrl: string | null;
+  onBack?: () => void;
 }
 
 export interface MessageInputProps {
