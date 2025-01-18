@@ -25,7 +25,7 @@ import { MessageBubbleProps } from "@/app/types/types";
           {renderAvatar(isCurrentUser)}
         </div>
         <div
-          className={`max-w-[50%] rounded-lg px-2 min-w-[10%] py-2 shadow-sm ${
+          className={`max-w-[70%] rounded-lg px-2 min-w-[10%] py-2 shadow-sm ${
             isCurrentUser
               ? "bg-green-600 text-white"
               : "bg-[#F3F4F6] text-black"
