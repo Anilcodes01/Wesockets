@@ -7,13 +7,11 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "prisma generate"
-    
+    "postinstall": "git submodule update --init --recursive && prisma generate"
   },
   "prisma": {
-  "schema": "./prisma/schema.prisma"
-}
-,
+    "schema": "./prisma/schema.prisma"
+  },
   "dependencies": {
     "@prisma/client": "^6.2.1",
     "@types/socket.io": "^3.0.1",
