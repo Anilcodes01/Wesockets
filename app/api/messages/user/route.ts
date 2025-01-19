@@ -1,5 +1,5 @@
 import { authOptions } from "@/app/lib/authOptions";
-import { prisma } from "@/app/lib/prisma";
+import {prisma} from '@/app/lib/prisma'
 import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 
@@ -10,7 +10,7 @@ export async function GET() {
     if (!session) {
       return NextResponse.json(
         {
-          message: "Unauthorized",
+          message: "Unauthorized...!",
         },
         { status: 401 }
       );
