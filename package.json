@@ -10,7 +10,7 @@
     "postinstall": "git submodule update --init --recursive && prisma generate"
   },
   "prisma": {
-    "schema": "./prisma/schema.prisma"
+    "schema": "./prisma/prisma/schema.prisma"
   },
   "dependencies": {
     "@prisma/client": "^6.2.1",
