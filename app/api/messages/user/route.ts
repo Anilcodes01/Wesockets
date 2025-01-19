@@ -16,10 +16,8 @@ export async function GET() {
       );
     }
 
-    // Get current user's ID from session
     const currentUserId = session.user.id;
 
-    // Fetch all users except the current user
     const users = await prisma.user.findMany({
       where: {
         NOT: {
